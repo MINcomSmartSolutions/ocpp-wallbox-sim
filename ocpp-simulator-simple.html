@@ -1,0 +1,1210 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EV Charging Station Simulator</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(45deg, #2c3e50, #34495e);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            font-weight: 300;
+        }
+
+        .header p {
+            font-size: 1.2em;
+            opacity: 0.9;
+        }
+
+        .main-content {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 0;
+            min-height: 600px;
+        }
+
+        .control-panel {
+            padding: 40px;
+            background: #f8f9fa;
+        }
+
+        .status-panel {
+            padding: 40px;
+            background: white;
+            border-left: 1px solid #e9ecef;
+        }
+
+        .section {
+            margin-bottom: 30px;
+        }
+
+        .section h2 {
+            color: #2c3e50;
+            margin-bottom: 15px;
+            font-size: 1.3em;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .icon {
+            width: 24px;
+            height: 24px;
+            display: inline-block;
+        }
+
+        .input-group {
+            margin-bottom: 20px;
+        }
+
+        .input-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+            color: #495057;
+        }
+
+        .input-group input, .input-group select {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid #e9ecef;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: border-color 0.3s ease;
+        }
+
+        .input-group input:focus, .input-group select:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            width: 100%;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.3);
+        }
+
+        .btn-success {
+            background: linear-gradient(45deg, #28a745, #20c997);
+            color: white;
+        }
+
+        .btn-success:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(40, 167, 69, 0.3);
+        }
+
+        .btn-danger {
+            background: linear-gradient(45deg, #dc3545, #fd7e14);
+            color: white;
+        }
+
+        .btn-danger:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(220, 53, 69, 0.3);
+        }
+
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none !important;
+            box-shadow: none !important;
+        }
+
+        .status-indicator {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+        }
+
+        .status-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            animation: pulse 2s infinite;
+        }
+
+        .status-disconnected {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        .status-disconnected .status-dot {
+            background: #dc3545;
+        }
+
+        .status-connected {
+            background: #d1ecf1;
+            color: #0c5460;
+        }
+
+        .status-connected .status-dot {
+            background: #17a2b8;
+        }
+
+        .status-charging {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .status-charging .status-dot {
+            background: #28a745;
+        }
+
+        .log-panel {
+            background: #2c3e50;
+            color: #ecf0f1;
+            border-radius: 8px;
+            height: 300px;
+            overflow-y: auto;
+            padding: 15px;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            line-height: 1.4;
+        }
+
+        .log-entry {
+            margin-bottom: 8px;
+            opacity: 0;
+            animation: fadeIn 0.3s ease forwards;
+        }
+
+        .log-time {
+            color: #95a5a6;
+            margin-right: 10px;
+        }
+
+        .log-success {
+            color: #2ecc71;
+        }
+
+        .log-error {
+            color: #e74c3c;
+        }
+
+        .log-info {
+            color: #3498db;
+        }
+
+        @keyframes pulse {
+            0%, 100% {
+                opacity: 1;
+            }
+            50% {
+                opacity: 0.5;
+            }
+        }
+
+        @keyframes fadeIn {
+            to {
+                opacity: 1;
+            }
+        }
+
+        .tooltip {
+            position: relative;
+            display: inline-block;
+        }
+
+        .tooltip .tooltiptext {
+            visibility: hidden;
+            width: 200px;
+            background-color: #555;
+            color: #fff;
+            text-align: center;
+            border-radius: 6px;
+            padding: 8px;
+            position: absolute;
+            z-index: 1;
+            bottom: 125%;
+            left: 50%;
+            margin-left: -100px;
+            opacity: 0;
+            transition: opacity 0.3s;
+            font-size: 12px;
+        }
+
+        .tooltip:hover .tooltiptext {
+            visibility: visible;
+            opacity: 1;
+        }
+
+        .quick-actions {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        .card-info {
+            background: #e3f2fd;
+            border: 1px solid #bbdefb;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 20px;
+        }
+
+        .card-info h3 {
+            color: #1565c0;
+            margin-bottom: 10px;
+            font-size: 1.1em;
+        }
+
+        .card-info p {
+            color: #1976d2;
+            font-size: 14px;
+            line-height: 1.4;
+        }
+
+        @media (max-width: 768px) {
+            .main-content {
+                grid-template-columns: 1fr;
+            }
+
+            .header h1 {
+                font-size: 2em;
+            }
+
+            .control-panel, .status-panel {
+                padding: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="header">
+        <h1>⚡ EV Charging Station Simulator</h1>
+        <p>Test and explore OCPP 1.6 charging protocols with ease</p>
+    </div>
+
+    <div class="main-content">
+        <div class="control-panel">
+            <div class="card-info">
+                <h3>🚀 Quick Start Guide</h3>
+                <p>1. Enter your charging station ID<br>
+                    2. Click "Connect to Network"<br></p>
+            </div>
+
+            <div class="section">
+                <h2>
+                    <span class="icon">🔌</span>
+                    Station Setup
+                </h2>
+                <div class="input-group">
+                    <label for="stationId" class="tooltip">
+                        Charging Station ID
+                        <span class="tooltiptext">Enter a unique identifier for your charging station (e.g., STATION_001)</span>
+                    </label>
+                    <input type="text" id="stationId" placeholder="Enter station ID (e.g., STATION_001)"
+                           value="TEST_wallbox">
+                </div>
+                <button class="btn btn-primary" id="connectBtn">
+                    <span>🌐</span>
+                    Connect to Network
+                </button>
+            </div>
+
+            <div class="section">
+                <h2>
+                    <span class="icon">💳</span>
+                    RFID Card
+                </h2>
+                <div class="input-group">
+                    <label for="rfidCard" class="tooltip">
+                        RFID Card Number
+                        <span class="tooltiptext">Enter your RFID card number or use the default test card</span>
+                    </label>
+                    <input type="text" id="rfidCard" placeholder="Scan or enter RFID card" value="test_card_123">
+                </div>
+                <button class="btn btn-success" id="authorizeBtn" disabled>
+                    Authorize Card
+                </button>
+            </div>
+
+            <div class="section">
+                <h2>
+                    <span class="icon">🔋</span>
+                    Charging Control
+                </h2>
+                <div class="input-group">
+                    <label for="connectorSelect">Choose Connector</label>
+                    <select id="connectorSelect">
+                        <option value="1">Connector 1 (Type 2)</option>
+                        <option value="2">Connector 2 (CCS)</option>
+                    </select>
+                </div>
+                <div class="input-group">
+                    <label for="targetEnergyInput" class="tooltip">
+                        Target Energy (kWh)
+                        <span class="tooltiptext">Set how much energy you want to charge (5-100 kWh)</span>
+                    </label>
+                    <input type="number" id="targetEnergyInput" min="5" max="100" step="0.1" value="25.0"
+                           placeholder="25.0">
+                </div>
+                <div class="input-group">
+                    <label for="chargingPowerInput" class="tooltip">
+                        Charging Power (kW)
+                        <span class="tooltiptext">Set the charging power rate (3.7-22 kW for AC, up to 150 kW for DC)</span>
+                    </label>
+                    <input type="number" id="chargingPowerInput" min="3.7" max="150" step="0.1" value="11.0"
+                           placeholder="11.0">
+                </div>
+                <button class="btn btn-success" id="startChargingBtn" disabled>
+                    <span>⚡</span>
+                    Start Charging
+                </button>
+                <button class="btn btn-danger" id="stopChargingBtn" disabled>
+                    <span>⏹️</span>
+                    Stop Charging
+                </button>
+            </div>
+
+            <div class="section" id="stopReasonSection" style="display: none;">
+                <h2>
+                    <span class="icon">⏹️</span>
+                    Stop Charging
+                </h2>
+                <div class="input-group">
+                    <label for="stopReasonSelect" class="tooltip">
+                        Reason for Stopping
+                        <span class="tooltiptext">Select why the charging session is ending</span>
+                    </label>
+                    <select id="stopReasonSelect">
+                        <option value="Local">User stopped locally</option>
+                        <option value="Remote">Stopped remotely</option>
+                        <option value="EVDisconnected">EV disconnected</option>
+                        <option value="DeAuthorized">Card deauthorized</option>
+                        <option value="EmergencyStop">Emergency stop</option>
+                        <option value="GroundFault">Ground fault</option>
+                        <option value="ImmediateReset">Immediate reset</option>
+                        <option value="LocalOutOfCredit">Out of credit</option>
+                        <option value="MasterPass">Master pass used</option>
+                        <option value="Other">Other reason</option>
+                        <option value="OvercurrentFault">Overcurrent fault</option>
+                        <option value="PowerLoss">Power loss</option>
+                        <option value="PowerQuality">Power quality issue</option>
+                        <option value="Reboot">System reboot</option>
+                        <option value="SOCLimitReached">Battery full (SOC limit)</option>
+                        <option value="StoppedByEV">Stopped by vehicle</option>
+                        <option value="TimeLimitReached">Time limit reached</option>
+                        <option value="UnlockCommand">Unlock command</option>
+                    </select>
+                </div>
+                <button class="btn btn-danger" id="confirmStopBtn">
+                    <span>✋</span>
+                    Confirm Stop
+                </button>
+                <button class="btn btn-primary" id="cancelStopBtn">
+                    <span>↩️</span>
+                    Cancel
+                </button>
+            </div>
+
+            <div class="section">
+                <h2>
+                    <span class="icon">⚙️</span>
+                    Quick Actions
+                </h2>
+                <div class="quick-actions">
+                    <button class="btn btn-primary" id="heartbeatBtn" disabled>
+                        <span>💓</span>
+                        Send Heartbeat
+                    </button>
+                    <button class="btn btn-primary" id="statusBtn" disabled>
+                        <span>📊</span>
+                        Update Status
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <div class="status-panel">
+            <div class="section">
+                <h2>
+                    <span class="icon">📡</span>
+                    Connection Status
+                </h2>
+                <div class="status-indicator status-disconnected" id="connectionStatus">
+                    <div class="status-dot"></div>
+                    <span>Disconnected from network</span>
+                </div>
+            </div>
+
+            <div class="section">
+                <h2>
+                    <span class="icon">🔋</span>
+                    Charging Status
+                </h2>
+                <div class="status-indicator status-disconnected" id="chargingStatus">
+                    <div class="status-dot"></div>
+                    <span>Not charging</span>
+                </div>
+                <div class="input-group">
+                    <label>Target Energy</label>
+                    <input type="text" id="targetEnergyDisplay" value="25.0 kWh" readonly>
+                </div>
+                <div class="input-group">
+                    <label>Charging Power</label>
+                    <input type="text" id="chargingPowerDisplay" value="0 kW" readonly>
+                </div>
+                <div class="input-group">
+                    <label>Session Energy</label>
+                    <input type="text" id="energyDisplay" value="0 kWh" readonly>
+                </div>
+                <div class="input-group">
+                    <label>Progress</label>
+                    <input type="text" id="progressDisplay" value="0%" readonly>
+                </div>
+                <div class="input-group">
+                    <label>Estimated Time</label>
+                    <input type="text" id="timeEstimateDisplay" value="-" readonly>
+                </div>
+                <div class="input-group">
+                    <label>Transaction ID</label>
+                    <input type="text" id="transactionDisplay" value="-" readonly>
+                </div>
+            </div>
+
+            <div class="section">
+                <h2>
+                    <span class="icon">📝</span>
+                    Activity Log
+                </h2>
+                <div class="log-panel" id="logPanel">
+                    <div class="log-entry">
+                        <span class="log-time">[System]</span>
+                        <span class="log-info">Welcome to the EV Charging Simulator</span>
+                    </div>
+                    <div class="log-entry">
+                        <span class="log-time">[System]</span>
+                        <span class="log-info">Ready to connect to charging network</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script>
+	// Pre-configured SteVe server URL
+	const STEVE_SERVER_URL = 'ws://localhost:8180/steve/websocket/CentralSystemService/';
+
+	// Application state
+	let websocket = null;
+	let isConnected = false;
+	let isCharging = false;
+	let currentTransactionId = null;
+	let heartbeatInterval = null;
+	let meterValue = Math.random() * 1000 + 100; // Start with random meter value (100-1100 kWh)
+	let sessionStartTime = null;
+	let targetEnergy = 25.0; // kWh
+	let chargingPower = 11.0; // kW
+	let sessionEnergy = 0;
+	let chargingStartMeterValue = 0;
+	let powerSimulationInterval = null;
+
+
+	// Generate unique message ID
+	function generateMessageId() {
+		return Math.random().toString(36).substring(2) + Date.now().toString(36);
+	}
+
+
+	// Log messages with timestamp
+	function logMessage(message, type = 'info') {
+		const timestamp = new Date().toLocaleTimeString();
+		const logPanel = document.getElementById('logPanel');
+		const entry = document.createElement('div');
+		entry.className = 'log-entry';
+		entry.innerHTML = `
+                <span class="log-time">[${timestamp}]</span>
+                <span class="log-${type}">${message}</span>
+            `;
+		logPanel.appendChild(entry);
+		logPanel.scrollTop = logPanel.scrollHeight;
+	}
+
+
+	// Update connection status
+	function updateConnectionStatus(connected) {
+		const statusElement = document.getElementById('connectionStatus');
+		const connectBtn = document.getElementById('connectBtn');
+
+		if (connected) {
+			statusElement.className = 'status-indicator status-connected';
+			statusElement.innerHTML = '<div class="status-dot"></div><span>Connected to charging network</span>';
+			connectBtn.innerHTML = '<span>🔌</span>Disconnect';
+			connectBtn.className = 'btn btn-danger';
+
+			// Enable other buttons
+			document.getElementById('authorizeBtn').disabled = false;
+			document.getElementById('heartbeatBtn').disabled = false;
+			document.getElementById('statusBtn').disabled = false;
+			// Start button will be enabled after successful authorization
+		} else {
+			statusElement.className = 'status-indicator status-disconnected';
+			statusElement.innerHTML = '<div class="status-dot"></div><span>Disconnected from network</span>';
+			connectBtn.innerHTML = '<span>🌐</span>Connect to Network';
+			connectBtn.className = 'btn btn-primary';
+
+			// Disable other buttons
+			document.getElementById('authorizeBtn').disabled = true;
+			document.getElementById('startChargingBtn').disabled = true;
+			document.getElementById('stopChargingBtn').disabled = true;
+			document.getElementById('heartbeatBtn').disabled = true;
+			document.getElementById('statusBtn').disabled = true;
+		}
+		isConnected = connected;
+	}
+
+
+	// Update charging status
+	function updateChargingStatus(charging, power = 0) {
+		const statusElement = document.getElementById('chargingStatus');
+		const startBtn = document.getElementById('startChargingBtn');
+		const stopBtn = document.getElementById('stopChargingBtn');
+		const stopReasonSection = document.getElementById('stopReasonSection');
+
+		if (charging) {
+			statusElement.className = 'status-indicator status-charging';
+			statusElement.innerHTML = '<div class="status-dot"></div><span>Charging in progress</span>';
+			startBtn.disabled = true;
+			stopBtn.disabled = false;
+
+			// Update target energy and power from inputs
+			targetEnergy = parseFloat(document.getElementById('targetEnergyInput').value) || 25.0;
+			chargingPower = parseFloat(document.getElementById('chargingPowerInput').value) || 11.0;
+
+			// Display target energy and charging power
+			document.getElementById('targetEnergyDisplay').value = `${targetEnergy} kWh`;
+			document.getElementById('chargingPowerDisplay').value = `${chargingPower} kW`;
+
+			// Calculate estimated time
+			const estimatedHours = (targetEnergy - sessionEnergy) / chargingPower;
+			const hours = Math.floor(estimatedHours);
+			const minutes = Math.floor((estimatedHours - hours) * 60);
+			document.getElementById('timeEstimateDisplay').value = `${hours}h ${minutes}m`;
+
+			// Start simulating power consumption
+			if (!sessionStartTime) {
+				sessionStartTime = new Date();
+				chargingStartMeterValue = meterValue;
+				sessionEnergy = 0; // Reset session energy
+				logMessage(`Starting charging: ${chargingPower} kW, Target: ${targetEnergy} kWh`, 'info');
+				logMessage(`Start meter value: ${chargingStartMeterValue.toFixed(3)} kWh`, 'info');
+				console.log(
+						`Debug - Starting charging with Power: ${chargingPower} kW, Target: ${targetEnergy} kWh, Start Meter: ${chargingStartMeterValue}`);
+			}
+			isCharging = true;
+			simulatePowerConsumption();
+		} else {
+			statusElement.className = 'status-indicator status-disconnected';
+			statusElement.innerHTML = '<div class="status-dot"></div><span>Not charging</span>';
+			startBtn.disabled = false;
+			stopBtn.disabled = true;
+			stopReasonSection.style.display = 'none';
+
+			sessionStartTime = null;
+			document.getElementById('chargingPowerDisplay').value = '0 kW';
+			document.getElementById('progressDisplay').value = '0%';
+			document.getElementById('timeEstimateDisplay').value = '-';
+
+			// Clear power simulation interval
+			if (powerSimulationInterval) {
+				clearInterval(powerSimulationInterval);
+				powerSimulationInterval = null;
+			}
+		}
+		isCharging = charging;
+	}
+
+
+	// Simulate power consumption during charging
+	function simulatePowerConsumption() {
+		if (!isCharging) return;
+
+		// Clear any existing interval
+		if (powerSimulationInterval) {
+			clearInterval(powerSimulationInterval);
+		}
+
+		powerSimulationInterval = setInterval(() => {
+			if (!isCharging) {
+				clearInterval(powerSimulationInterval);
+				return;
+			}
+
+			// Add small random variation to charging power (±5%)
+			const variation = (Math.random() - 0.5) * 0.1; // ±5%
+			const currentPower = chargingPower * (1 + variation);
+
+			// Update session energy (simulate 1 minute intervals for faster progress)
+			const simulatedTimeMinutes = 1; // Simulate 1 minute per update
+			const energyIncrement = (currentPower / 60) * simulatedTimeMinutes; // kWh in 1 minute
+			sessionEnergy += energyIncrement;
+			meterValue += energyIncrement;
+
+			console.log(`Debug - Current Power: ${currentPower.toFixed(1)} kW, Energy Increment: ${energyIncrement.toFixed(
+					4)} kWh, Session Energy: ${sessionEnergy.toFixed(4)} kWh, Total Meter: ${meterValue.toFixed(4)} kWh`);
+
+			// Update displays
+			document.getElementById('chargingPowerDisplay').value = `${currentPower.toFixed(1)} kW`;
+			document.getElementById('energyDisplay').value = `${sessionEnergy.toFixed(3)} kWh`;
+
+			// Calculate progress
+			const progress = Math.min((sessionEnergy / targetEnergy) * 100, 100);
+			document.getElementById('progressDisplay').value = `${progress.toFixed(1)}%`;
+
+			// Log progress for debugging
+			logMessage(
+					`Power: ${currentPower.toFixed(1)}kW, Energy: ${sessionEnergy.toFixed(3)}kWh, Progress: ${progress.toFixed(
+							1)}%`, 'info');
+
+			// Update estimated time remaining
+			const remainingEnergy = Math.max(targetEnergy - sessionEnergy, 0);
+			const estimatedHours = remainingEnergy / chargingPower;
+			const hours = Math.floor(estimatedHours);
+			const minutes = Math.floor((estimatedHours - hours) * 60);
+
+			if (remainingEnergy > 0) {
+				document.getElementById('timeEstimateDisplay').value = `${hours}h ${minutes}m`;
+			} else {
+				document.getElementById('timeEstimateDisplay').value = 'Complete!';
+			}
+
+			// Send meter values to server
+			if (websocket && isConnected) {
+				sendMeterValues();
+			}
+
+			// Auto-stop when target energy is reached
+			if (sessionEnergy >= targetEnergy) {
+				logMessage('Target energy reached - stopping charging session', 'success');
+				document.getElementById('stopReasonSelect').value = 'Local';
+				stopChargingWithReason();
+			}
+
+		}, 2000); // Update every 2 seconds (simulating 1 minute each time)
+	}
+
+
+	// WebSocket connection
+	function connectToNetwork() {
+		if (websocket) {
+			websocket.close();
+			return;
+		}
+
+		const stationId = document.getElementById('stationId').value;
+		if (!stationId) {
+			logMessage('Please enter a station ID', 'error');
+			return;
+		}
+
+		const wsUrl = STEVE_SERVER_URL + stationId;
+		logMessage(`Connecting to ${wsUrl}...`);
+
+		websocket = new WebSocket(wsUrl, ['ocpp1.6']);
+
+		websocket.onopen = function () {
+			logMessage('Connected to charging network', 'success');
+			updateConnectionStatus(true);
+			sendBootNotification();
+		};
+
+		websocket.onmessage = function (event) {
+			handleMessage(JSON.parse(event.data));
+		};
+
+		websocket.onclose = function (event) {
+			logMessage('Disconnected from charging network', 'error');
+			updateConnectionStatus(false);
+			updateChargingStatus(false);
+			websocket = null;
+
+			if (heartbeatInterval) {
+				clearInterval(heartbeatInterval);
+				heartbeatInterval = null;
+			}
+		};
+
+		websocket.onerror = function (error) {
+			logMessage('Connection error occurred', 'error');
+			console.error('WebSocket error:', error);
+		};
+	}
+
+
+	// Handle incoming messages
+	function handleMessage(data) {
+		console.log('Received:', data);
+
+		if (data[0] === 3) { // CallResult
+			handleCallResult(data);
+		} else if (data[0] === 2) { // Call
+			handleCall(data);
+		} else if (data[0] === 4) { // CallError
+			logMessage(`Error: ${data[3]}`, 'error');
+			// Re-enable start button if there was an error
+			if (!isCharging) {
+				document.getElementById('startChargingBtn').disabled = false;
+			}
+		}
+	}
+
+
+	// Handle call results
+	function handleCallResult(data) {
+		const messageId = data[1];
+		const payload = data[2];
+
+		// Add detailed logging for debugging
+		console.log('HandleCallResult - Full data:', data);
+		console.log('HandleCallResult - Payload:', payload);
+		logMessage(`Received response: ${JSON.stringify(payload)}`, 'info');
+
+		// Handle different types of responses
+		if (payload.interval) {
+			// Boot notification response - start heartbeat
+			const interval = payload.interval * 1000;
+			logMessage(`Heartbeat interval set to ${payload.interval} seconds`, 'success');
+			startHeartbeat(interval);
+		}
+		if (payload.status === 'ConcurrentTx') {
+			logMessage('Concurrent transaction detected - stopping previous session', 'error');
+			// Automatically stop previous transaction if needed
+			if (isCharging) {
+				document.getElementById('stopReasonSelect').value = 'ConcurrentTx';
+				stopChargingWithReason();
+			}
+			return;
+		}
+
+
+		// Check for StartTransaction response
+		if (payload.transactionId !== undefined) {
+			currentTransactionId = payload.transactionId;
+			document.getElementById('transactionDisplay').value = currentTransactionId;
+			logMessage(`Transaction started: ${currentTransactionId}`, 'success');
+			updateChargingStatus(true);
+		}
+		// Alternative check - some servers might send different response format
+		else if (payload.status === 'Accepted' && payload.idTagInfo) {
+			// This might be a StartTransaction response without transactionId
+			logMessage('StartTransaction accepted - checking status...', 'info');
+			// Send a status notification to confirm charging state
+			setTimeout(() => {
+				sendStatusNotification('Charging');
+			}, 1000);
+		}
+
+		if (payload.idTagInfo) {
+			const status = payload.idTagInfo.status;
+			if (status === 'Accepted') {
+				const authorizeBtn = document.getElementById('authorizeBtn')
+				authorizeBtn.innerHTML = '<span class="icon" >✅</span>Authorize Card Again';
+				logMessage('RFID card authorized successfully', 'success');
+				// Only enable start button if not currently charging
+				if (!isCharging) {
+					document.getElementById('startChargingBtn').disabled = false;
+				}
+			} else if (status === 'Blocked') {
+				logMessage('Card is blocked - cannot start charging', 'error');
+				document.getElementById('startChargingBtn').disabled = true;
+			} else if (status === 'ConcurrentTx') {
+				document.getElementById('startChargingBtn').disabled = false;
+				stopChargingWithReason();
+			} else {
+				logMessage(`Card authorization failed: ${status}`, 'error');
+				document.getElementById('startChargingBtn').disabled = true;
+			}
+		}
+	}
+
+
+	// Handle incoming calls (remote commands)
+	function handleCall(data) {
+		const messageId = data[1];
+		const action = data[2];
+		const payload = data[3];
+
+		logMessage(`Received remote command: ${action}`, 'info');
+
+		switch (action) {
+			case 'RemoteStartTransaction':
+				// Automatically start transaction
+				const response = [3, messageId, { status: 'Accepted' }];
+				websocket.send(JSON.stringify(response));
+
+				// Update UI
+				if (payload.idTag) {
+					document.getElementById('rfidCard').value = payload.idTag;
+				}
+				setTimeout(() => {
+					startCharging(payload.connectorId, payload.idTag);
+				}, 1000);
+				break;
+
+			case 'RemoteStopTransaction':
+				// Automatically stop transaction
+				const stopResponse = [3, messageId, { status: 'Accepted' }];
+				websocket.send(JSON.stringify(stopResponse));
+				document.getElementById('stopReasonSelect').value = 'Remote';
+				setTimeout(stopChargingWithReason, 1000);
+				break;
+
+			case 'Reset':
+				// Handle reset command
+				const resetResponse = [3, messageId, { status: 'Accepted' }];
+				websocket.send(JSON.stringify(resetResponse));
+				logMessage('Reset command received - reloading...', 'info');
+				setTimeout(() => location.reload(), 2000);
+				break;
+
+			default:
+				// Send error for unsupported actions
+				const errorResponse = [4, messageId, 'NotSupported', 'Action not supported', {}];
+				websocket.send(JSON.stringify(errorResponse));
+		}
+	}
+
+
+	// Send boot notification
+	function sendBootNotification() {
+		const message = [
+			2, generateMessageId(), 'BootNotification', {
+				chargePointVendor: 'Simulator Inc.',
+				chargePointModel: 'Simple OCPP Tester',
+				chargePointSerialNumber: 'SIM-001',
+				firmwareVersion: '1.0.0',
+			},
+		];
+
+		websocket.send(JSON.stringify(message));
+		logMessage('Sent boot notification');
+	}
+
+
+	// Start heartbeat
+	function startHeartbeat(interval) {
+		if (heartbeatInterval) {
+			clearInterval(heartbeatInterval);
+		}
+
+		heartbeatInterval = setInterval(() => {
+			if (websocket && isConnected) {
+				const message = [2, generateMessageId(), 'Heartbeat', {}];
+				websocket.send(JSON.stringify(message));
+			}
+		}, interval);
+	}
+
+
+	// Authorize RFID card
+	function authorizeCard() {
+		const idTag = document.getElementById('rfidCard').value;
+
+		if (!idTag) {
+			logMessage('Please enter an RFID card number', 'error');
+			return;
+		}
+
+		const message = [
+			2, generateMessageId(), 'Authorize', { idTag: idTag },
+		];
+
+		websocket.send(JSON.stringify(message));
+		logMessage(`Authorizing card: ${idTag}`);
+	}
+
+
+	// Start charging
+	function startCharging(connectorId = null, idTag = null) {
+		// Immediately disable the button to prevent double-clicks
+		document.getElementById('startChargingBtn').disabled = true;
+
+		if (!connectorId) {
+			connectorId = parseInt(document.getElementById('connectorSelect').value);
+		}
+		if (!idTag) {
+			idTag = document.getElementById('rfidCard').value;
+		}
+
+		if (!idTag) {
+			logMessage('Please enter an RFID card number first', 'error');
+			// Re-enable button if there's an error
+			document.getElementById('startChargingBtn').disabled = false;
+			return;
+		}
+
+		if (!websocket || !isConnected) {
+			logMessage('Not connected to charging network', 'error');
+			// Re-enable button if there's an error
+			document.getElementById('startChargingBtn').disabled = false;
+			return;
+		}
+
+		const message = [
+			2, generateMessageId(), 'StartTransaction', {
+				connectorId: connectorId,
+				idTag: idTag,
+				timestamp: new Date().toISOString(),
+				meterStart: Math.floor(meterValue * 1000), // Convert to Wh
+			},
+		];
+
+		websocket.send(JSON.stringify(message));
+		logMessage(`Starting charging session on connector ${connectorId}...`);
+
+		// Set a timeout to check if charging started
+		// setTimeout(() => {
+		// 	if (!isCharging && currentTransactionId === null) {
+		//       // try to start charging manually
+		// 		logMessage('No transaction ID received - attempting to start charging anyway', 'info');
+		//
+		// 		// Generate a local transaction ID
+		// 		currentTransactionId = Math.floor(Math.random() * 100000);
+		// 		document.getElementById('transactionDisplay').value = currentTransactionId;
+		//
+		// 		// Ensure meter values are properly set for manual start
+		// 		if (!sessionStartTime) {
+		// 			sessionStartTime = new Date();
+		// 			chargingStartMeterValue = meterValue;
+		// 			sessionEnergy = 0;
+		// 			logMessage(`Manual start - Initial meter: ${chargingStartMeterValue.toFixed(3)} kWh`, 'info');
+		// 		}
+		//
+		// 		// Start charging manually
+		// 		updateChargingStatus(true);
+		//
+		// 		// Send status notification
+		// 		sendStatusNotification('Charging');
+		// 	} else if (!isCharging) {
+		// 		document.getElementById('startChargingBtn').disabled = false;
+		// 		logMessage('No response received - please try again', 'error');
+		// 	}
+		// }, 5000); // 5 second timeout (reduced from 10)
+	}
+
+
+	// Stop charging
+	function stopCharging() {
+		// Show stop reason selection instead of immediately stopping
+		document.getElementById('stopReasonSection').style.display = 'block';
+		document.getElementById('stopChargingBtn').disabled = true;
+	}
+
+
+	// Stop charging with selected reason
+	function stopChargingWithReason() {
+		if (!currentTransactionId) {
+			logMessage('No active charging session to stop', 'error');
+			return;
+		}
+
+		const stopReason = document.getElementById('stopReasonSelect').value;
+		const idTag = document.getElementById('rfidCard').value;
+
+		// Log meter values for debugging
+		logMessage(`Stop meter values - Start: ${chargingStartMeterValue.toFixed(3)} kWh, Current: ${meterValue.toFixed(
+				3)} kWh, Session: ${sessionEnergy.toFixed(3)} kWh`, 'info');
+
+		const message = [
+			2, generateMessageId(), 'StopTransaction', {
+				transactionId: currentTransactionId,
+				idTag: idTag,
+				timestamp: new Date().toISOString(),
+				meterStop: Math.floor(meterValue * 1000), // Convert to Wh
+				reason: stopReason,
+				transactionData: [
+					{
+						timestamp: sessionStartTime ? sessionStartTime.toISOString() : new Date().toISOString(), sampledValue: [
+							{
+								value: Math.floor(chargingStartMeterValue * 1000).toString(),
+								context: 'Transaction.Begin',
+								measurand: 'Energy.Active.Import.Register',
+								unit: 'Wh',
+							},
+						],
+					}, {
+						timestamp: new Date().toISOString(), sampledValue: [
+							{
+								value: Math.floor(meterValue * 1000).toString(),
+								context: 'Transaction.End',
+								measurand: 'Energy.Active.Import.Register',
+								unit: 'Wh',
+							},
+						],
+					},
+				],
+			},
+		];
+
+		console.log('StopTransaction message:', JSON.stringify(message, null, 2));
+		websocket.send(JSON.stringify(message));
+		logMessage(`Stopping charging session - Reason: ${stopReason}`);
+		logMessage(
+				`Total energy delivered: ${sessionEnergy.toFixed(2)} kWh (${Math.floor(sessionEnergy * 1000)} Wh)`, 'success');
+
+		updateChargingStatus(false);
+		currentTransactionId = null;
+		sessionEnergy = 0;
+		document.getElementById('transactionDisplay').value = '-';
+		document.getElementById('energyDisplay').value = '0 kWh';
+	}
+
+
+	// Cancel stop operation
+	function cancelStop() {
+		document.getElementById('stopReasonSection').style.display = 'none';
+		document.getElementById('stopChargingBtn').disabled = false;
+	}
+
+
+	// Send meter values
+	function sendMeterValues() {
+		if (!currentTransactionId) return;
+
+		const connectorId = parseInt(document.getElementById('connectorSelect').value);
+		const message = [
+			2, generateMessageId(), 'MeterValues', {
+				connectorId: connectorId, transactionId: currentTransactionId, meterValue: [
+					{
+						timestamp: new Date().toISOString(), sampledValue: [
+							{
+								value: Math.floor(sessionEnergy * 1000).toString(), // Current session energy in Wh
+								measurand: 'Energy.Active.Import.Register', unit: 'Wh',
+							}, {
+								value: Math.floor(chargingPower * 1000).toString(), // Current power in W
+								measurand: 'Power.Active.Import', unit: 'W',
+							},
+						],
+					},
+				],
+			},
+		];
+
+		websocket.send(JSON.stringify(message));
+	}
+
+
+	// Send heartbeat manually
+	function sendHeartbeat() {
+		const message = [2, generateMessageId(), 'Heartbeat', {}];
+		websocket.send(JSON.stringify(message));
+		logMessage('Heartbeat sent');
+	}
+
+
+	// Send status notification
+	function sendStatusNotification(forceStatus = null) {
+		const connectorId = parseInt(document.getElementById('connectorSelect').value);
+		const status = forceStatus || (isCharging ? 'Charging' : 'Available');
+
+		const message = [
+			2, generateMessageId(), 'StatusNotification', {
+				connectorId: connectorId, status: status, errorCode: 'NoError', timestamp: new Date().toISOString(),
+			},
+		];
+
+		websocket.send(JSON.stringify(message));
+		logMessage(`Status updated: ${status}`);
+
+		// If we're setting status to Charging, assume the transaction started
+		if (status === 'Charging' && !isCharging) {
+			logMessage('Assuming charging started based on status update', 'info');
+			// Generate a fake transaction ID if we don't have one
+			if (!currentTransactionId) {
+				currentTransactionId = Math.floor(Math.random() * 100000);
+				document.getElementById('transactionDisplay').value = currentTransactionId;
+			}
+			updateChargingStatus(true);
+		}
+	}
+
+
+	// Event listeners
+	document.addEventListener('DOMContentLoaded', function () {
+		document.getElementById('connectBtn').addEventListener('click', connectToNetwork);
+		document.getElementById('authorizeBtn').addEventListener('click', authorizeCard);
+		document.getElementById('startChargingBtn').addEventListener('click', () => startCharging());
+		document.getElementById('stopChargingBtn').addEventListener('click', stopCharging);
+		document.getElementById('confirmStopBtn').addEventListener('click', stopChargingWithReason);
+		document.getElementById('cancelStopBtn').addEventListener('click', cancelStop);
+		document.getElementById('heartbeatBtn').addEventListener('click', sendHeartbeat);
+		document.getElementById('statusBtn').addEventListener('click', sendStatusNotification);
+
+		// Update target energy display when input changes
+		document.getElementById('targetEnergyInput').addEventListener('input', function () {
+			const energy = parseFloat(this.value) || 25.0;
+			document.getElementById('targetEnergyDisplay').value = `${energy} kWh`;
+		});
+
+		// Update charging power display when input changes
+		document.getElementById('chargingPowerInput').addEventListener('input', function () {
+			const power = parseFloat(this.value) || 11.0;
+			if (!isCharging) {
+				document.getElementById('chargingPowerDisplay').value = `${power} kW (set)`;
+			}
+		});
+
+		logMessage('Simulator ready - Enter your station ID and click Connect!', 'success');
+	});
+</script>
+</body>
+</html>
