@@ -428,19 +428,7 @@
                         <option value="EVDisconnected">EV disconnected</option>
                         <option value="DeAuthorized">Card deauthorized</option>
                         <option value="EmergencyStop">Emergency stop</option>
-                        <option value="GroundFault">Ground fault</option>
-                        <option value="ImmediateReset">Immediate reset</option>
-                        <option value="LocalOutOfCredit">Out of credit</option>
-                        <option value="MasterPass">Master pass used</option>
                         <option value="Other">Other reason</option>
-                        <option value="OvercurrentFault">Overcurrent fault</option>
-                        <option value="PowerLoss">Power loss</option>
-                        <option value="PowerQuality">Power quality issue</option>
-                        <option value="Reboot">System reboot</option>
-                        <option value="SOCLimitReached">Battery full (SOC limit)</option>
-                        <option value="StoppedByEV">Stopped by vehicle</option>
-                        <option value="TimeLimitReached">Time limit reached</option>
-                        <option value="UnlockCommand">Unlock command</option>
                     </select>
                 </div>
                 <button class="btn btn-danger" id="confirmStopBtn">
@@ -541,7 +529,7 @@
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script>
 	// Pre-configured SteVe server URL
-	const STEVE_SERVER_URL = 'ws://127.0.0.1:8180/steve/websocket/CentralSystemService/';
+	const STEVE_SERVER_URL = 'ws://localhost:8180/steve/websocket/CentralSystemService/';
 
 	// Application state
 	let websocket = null;
